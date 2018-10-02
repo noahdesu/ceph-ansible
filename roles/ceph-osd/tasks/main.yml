@@ -17,8 +17,8 @@
   # Hard code this so we will skip the entire file instead of individual tasks (Default isn't Consistent)
   static: False
 
-- name: include ceph_disk_cli_options_facts.yml
-  include_tasks: ceph_disk_cli_options_facts.yml
+- name: include container_options_facts.yml
+  include_tasks: container_options_facts.yml
 
 - name: include build_devices.yml
   include_tasks: build_devices.yml
@@ -29,26 +29,6 @@
     unit: MiB
   register: parted_results
   with_items: "{{ devices }}"
-
-- name: include check_gpt.yml
-  include_tasks: check_gpt.yml
-  when:
-    - osd_scenario != 'lvm'
-
-- name: include scenarios/collocated.yml
-  include: scenarios/collocated.yml
-  when:
-    - osd_scenario == 'collocated'
-  # Hard code this so we will skip the entire file instead of individual tasks (Default isn't Consistent)
-  static: False
-
-- name: include scenarios/non-collocated.yml
-  include: scenarios/non-collocated.yml
-  when:
-    - not osd_auto_discovery
-    - osd_scenario == 'non-collocated'
-  # Hard code this so we will skip the entire file instead of individual tasks (Default isn't Consistent)
-  static: False
 
 - name: include scenarios/lvm.yml
   include: scenarios/lvm.yml
@@ -63,14 +43,6 @@
   when:
     - osd_scenario == 'lvm'
     - devices|length > 0
-  # Hard code this so we will skip the entire file instead of individual tasks (Default isn't Consistent)
-  static: False
-
-- name: include activate_osds.yml
-  include: activate_osds.yml
-  when:
-    - not containerized_deployment
-    - osd_scenario != 'lvm'
   # Hard code this so we will skip the entire file instead of individual tasks (Default isn't Consistent)
   static: False
 
