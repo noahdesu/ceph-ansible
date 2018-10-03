@@ -1,0 +1,35 @@
+---
+- name: set_fact _monitor_address to monitor_address_block
+  set_fact:
+    _monitor_address: "{{ ansible_all_' + ip_version + '_addresses' | ipaddr(monitor_address_block) | first | ipwrap }}"
+  when:
+    - monitor_address_block is defined
+    - monitor_address_block != 'subnet'
+
+- name: set_fact _monitor_address to monitor_address
+  set_fact:
+    _monitor_address: "{{ monitor_address | ipwrap }}"
+  when:
+    - monitor_address is defined
+    - monitor_address != '0.0.0.0'
+
+- block:
+  - name: set_fact _interface
+    set_fact:
+      _interface: "{{ 'ansible_' + (monitor_interface | replace('-', '_')) }}"
+
+  - name: set_fact _monitor_address to monitor_interface - ipv4
+    set_fact:
+      _monitor_address: "{{ hostvars[inventory_hostname][_interface][ip_version]['address'] }}"
+    when:
+      - ip_version == 'ipv4'
+
+  - name: set_fact _monitor_address to monitor_interface - ipv6
+    set_fact:
+      _monitor_address: "{{ hostvars[inventory_hostname][_interface][ip_version][0]['address'] }}"
+    when:
+      - ip_version == 'ipv6'
+  when:
+    - monitor_address_block == 'subnet'
+    - monitor_address == '0.0.0.0'
+    - monitor_interface != 'interface'
