@@ -139,23 +139,27 @@
       delegate_to: "{{ item }}"
       register: osd_volumes
 
-    - name: filter osd volumes to kill by osd - non container
-      set_fact:
-        osd_volumes_to_kill_non_container: "{{ osd_volumes_to_kill_non_container | default([]) + [ (item.1.stdout|from_json)[item.0] ] }}"
-      with_together:
-        - "{{ osd_to_kill.split(',') }}"
-        - "{{ osd_volumes.results }}"
+    - name: xxx
+      debug:
+        msg: "XXX {{ osd_volumes }}"
 
-    - name: generate (host / volume) pairs to zap - non container
-      set_fact:
-        osd_host_volumes_to_kill_non_container: "{%- set _val = namespace(devs=[]) -%}
-        {%- for host in osd_hosts -%}
-        {%- for dev in osd_volumes_to_kill_non_container[loop.index-1] -%}
-        {%- set _val.devs = _val.devs + [{\"host\": host, \"path\": dev.path}] -%}
-        {%- endfor -%}
-        {%- endfor -%}
-        {{ _val.devs }}"
-
+#    - name: filter osd volumes to kill by osd - non container
+#      set_fact:
+#        osd_volumes_to_kill_non_container: "{{ osd_volumes_to_kill_non_container | default([]) + [ (item.1.stdout|from_json)[item.0] ] }}"
+#      with_together:
+#        - "{{ osd_to_kill.split(',') }}"
+#        - "{{ osd_volumes.results }}"
+#
+#    - name: generate (host / volume) pairs to zap - non container
+#      set_fact:
+#        osd_host_volumes_to_kill_non_container: "{%- set _val = namespace(devs=[]) -%}
+#        {%- for host in osd_hosts -%}
+#        {%- for dev in osd_volumes_to_kill_non_container[loop.index-1] -%}
+#        {%- set _val.devs = _val.devs + [{\"host\": host, \"path\": dev.path}] -%}
+#        {%- endfor -%}
+#        {%- endfor -%}
+#        {{ _val.devs }}"
+#
 #    # if nvme then osd_to_kill_disks is nvme0n1, we need nvme0
 #    # if ssd or hdd then osd_to_kill_disks is sda1, we need sda
 #    - name: stop osd services (container)
@@ -222,35 +226,35 @@
 #        - containerized_deployment
 #        - item.1 | length > 0
 #
-    - name: mark osd(s) out of the cluster
-      command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} osd out {{ item }}"
-      run_once: true
-      delegate_to: "{{ groups[mon_group_name][0] }}"
-      with_items: "{{ osd_to_kill.split(',') }}"
-
-      # XXX cluster?
-    - name: stop osd(s) service
-      service:
-        name: ceph-osd@{{ item.0 }}
-        state: stopped
-        enabled: no
-      with_together:
-        - "{{ osd_to_kill.split(',') }}"
-        - "{{ osd_hosts }}"
-      delegate_to: "{{ item.1 }}"
-
-    - name: zap osd devices
-      ceph_volume:
-        action: "zap"
-        data: "{{ item.path }}"
-      delegate_to: "{{ item.host }}"
-      with_items: "{{ osd_host_volumes_to_kill_non_container }}"
-
-    - name: purge osd(s) from the cluster
-      command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} osd purge {{ item }} --yes-i-really-mean-it"
-      run_once: true
-      delegate_to: "{{ groups[mon_group_name][0] }}"
-      with_items: "{{ osd_to_kill.split(',') }}"
+#    - name: mark osd(s) out of the cluster
+#      command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} osd out {{ item }}"
+#      run_once: true
+#      delegate_to: "{{ groups[mon_group_name][0] }}"
+#      with_items: "{{ osd_to_kill.split(',') }}"
+#
+#      # XXX cluster?
+#    - name: stop osd(s) service
+#      service:
+#        name: ceph-osd@{{ item.0 }}
+#        state: stopped
+#        enabled: no
+#      with_together:
+#        - "{{ osd_to_kill.split(',') }}"
+#        - "{{ osd_hosts }}"
+#      delegate_to: "{{ item.1 }}"
+#
+#    - name: zap osd devices
+#      ceph_volume:
+#        action: "zap"
+#        data: "{{ item.path }}"
+#      delegate_to: "{{ item.host }}"
+#      with_items: "{{ osd_host_volumes_to_kill_non_container }}"
+#
+#    - name: purge osd(s) from the cluster
+#      command: "{{ docker_exec_cmd }} ceph --cluster {{ cluster }} osd purge {{ item }} --yes-i-really-mean-it"
+#      run_once: true
+#      delegate_to: "{{ groups[mon_group_name][0] }}"
+#      with_items: "{{ osd_to_kill.split(',') }}"
 
     - name: show ceph health
       command: "{{ docker_exec_cmd_status|default('') }} ceph --cluster {{ cluster }} -s"
