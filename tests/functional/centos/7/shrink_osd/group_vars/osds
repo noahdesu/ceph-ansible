@@ -1,6 +1,8 @@
 ---
 os_tuning_params:
   - { name: fs.file-max, value: 26234859 }
+journal_size: 100
+osd_objectstore: "filestore"
 osd_scenario: lvm
 lvm_volumes:
   - data: data-lv1
